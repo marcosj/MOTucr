@@ -43,6 +43,7 @@ See example dir for example usage.
 ## Based on
 
 - <https://github.com/HodenX/python-traffic-counter-with-yolo-and-sort>
+- <https://github.com/abewley/sort>
 - <https://www.pyimagesearch.com/2018/07/23/simple-object-tracking-with-opencv/>
 - <https://github.com/cheind/py-motmetrics/>
 
