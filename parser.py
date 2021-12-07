@@ -20,8 +20,8 @@ def parse():
 		help='number of frames with oclusion for cent')
 	ap.add_argument('-g', '--gt', type=str,
 		help='manual annotation of input vid')
-	ap.add_argument('-p', '--predict', type=bool, default=False,
-		help='whether to determine metric with ground truth or just trace trajectory')
+	ap.add_argument('-p', '--predict', type=int, default=1,
+		help='whether to determine metric with ground truth or just trace trajectory. {0,1} Default: 0 (no metric)')
 	ap.add_argument('-d', '--maxdist', type=int, default=17,
 		help='max distance between consecutive ccentroids for same ID')
 	ap.add_argument('-n', '--nframes', type=int,

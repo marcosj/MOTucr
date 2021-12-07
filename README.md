@@ -38,6 +38,8 @@ optional arguments:
                         number of frames to process
 ```
 
+See example dir for example usage.
+
 ## Based on
 
 - <https://github.com/HodenX/python-traffic-counter-with-yolo-and-sort>
