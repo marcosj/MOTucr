@@ -13,8 +13,10 @@ import mota
 import motmetrics as mm
 
 def main():
+	# Parses command line arguments
 	args = cmd.parse()
 
+	# Opens input video and output with trajectory
 	vin, W, H, fps, _4cc, nframes = vid.istream(args['input'])
 	if args['output']:
 		fout = args['output']
@@ -22,8 +24,10 @@ def main():
 		fout = args['input'].split('.')[0] + '-' + args['tracker'] + '.avi'
 	vout = vid.ostream(fout, W, H, fps, _4cc)
 
+	# Initializes yolo
 	red, capas = yolo.load()
 
+	# Initializes tracker
 	if args['tracker'] == 'sort':
 		tracker = mot.Sort()
 	elif args['tracker'] == 'cent':
@@ -32,6 +36,7 @@ def main():
 		print('Tiene que pasar un método de rastreo')
 		quit()
 
+	# Initializes metric and opens ground truth data
 	if not args['predict']:
 		# Create an accumulator that will be updated during each frame
 		acc = mm.MOTAccumulator(auto_id=True)
@@ -41,50 +46,51 @@ def main():
 			gt = open(args['input'].split('.')[0] + '.gt')
 		stats = open('stats.dat', 'a')
 
+	# Centroid memory
 	mem = defaultdict(list)
+	# Random colors
 	cols = post.paleta()
-	unavez = True
+
+	# Annotation files
 	am = open(args['input'].split('.')[0] + '.am', 'w')
 	hyp = open(args['input'].split('.')[0] + '.' + args['tracker'], 'w')
 
+	# number of frames to process
 	n = nframes
 	if args['nframes'] and args['nframes'] < nframes:
 		n = args['nframes']
+
 	for i in range(n):
+		# Reads frame from stream
 		status, frame = vin.read()
 
-		# fin de video
-		#if not grabbed:
-		#	break
-
+		# Applies filter to image to improve detection
 		#pre.filtro(frame)
 
+		# Detects objects with Yolo. Takes over 99% of run time
 		ti_d = time.time()
 		dets = yolo.detect(frame, red, capas, args['confidence'], args['threshold'], W, H)
 		tf_d = time.time()
 
+		# Writes bounding boxes to file
 		for det in dets:
 			am.write(f'000 {" ".join([str(int(d)) for d in det[:-1]])} ')
 		am.write('\n')
 
-		if False:
-			elap = end - start
-			print("[INFO] single frame took {:.4f} seconds".format(elap))
-			print("[INFO] estimated total time to finish: {:.4f}".format(elap * nframes))
-			unavez = False
-
+		# Determines identities with tracker
 		ti_t = time.time()
 		boxes = tracker.update(dets)
 		tf_t = time.time()
 
+		# Converts output to dictionary for Sort
 		if args['tracker'] == 'sort':
 			boxes = post.box2cent(frame, boxes)
-		elif args['tracker'] == 'cent':
-			pass
 
+		# Draws object trayectories
 		frame = post.trace(frame, boxes, mem, cols)
 		vout.write(frame)
 
+		# Writes tracker output to file
 		tr_ids = list(boxes.keys())
 		tr_cents = list(boxes.values())
 		s = []
@@ -94,9 +100,8 @@ def main():
 			s.append(f'"{id_}": [{cx},{cy}]')
 		hyp.write('{'+', '.join(s)+'}\n')
 
+		# Updates metrics
 		if not args['predict']:
-			#tr_ids, tr_cents = mota.render(boxes)
-			#gt_ids, gt_cents = mota.render2(gt.readline())
 			gts = json.loads(gt.readline())
 			gt_ids = list(map(int, gts.keys()))
 			gt_cents = list(gts.values())
@@ -105,13 +110,15 @@ def main():
 		ttot = time.time()
 		print(f'{int(100*(i+1)/n):3}% ({i+1}/{n}) {tf_d-ti_d:.2}s (yolo)'
 			  f" + {(tf_t-ti_t)*1000:.2}ms ({args['tracker']}) = {ttot-ti_d:.2}s  ", end='\r')
-
 	print()
+
+	# Computes total metrics
 	if not args['predict']:
 		mota.compute(acc, stats, args['input'].split('.')[0] + args['tracker'])
 		gt.close()
 		stats.close()
 
+	# Housekeeping
 	vout.release()
 	vin.release()
 	hyp.close()

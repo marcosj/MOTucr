@@ -18,7 +18,7 @@ Next you transform it to json
 
 	python3 gttool/box2cent.py example/pav.gt2
 
-is `pav.gt`.
+to get `pav.gt`.
 
 Now you can run the tracker in metrics mode
 
