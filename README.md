@@ -1,4 +1,5 @@
-# Multiple vehicle tracker with Yolo, SORT and MOT metrics.
+# MOTucr
+Multiple vehicle tracker with Yolo, SORT and MOT metrics.
 
 ## Code design
 
